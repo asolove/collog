@@ -11,23 +11,23 @@
       body { 
         font: 12px/15px "Palatino Linotype", "Book Antiqua", "Palatino", serif; 
         margin: 0; 
-        background:#000; 
+        background:#333; 
         overflow:hidden;
       }
       #content {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        margin-left: -432px;
-        margin-top: -240px;
-        width: 864px;
-        height: 480px;
-        background:#234;
+        margin:15px;
+        width: 500px;
+        height: 95%%;
+        background:#222;
         overflow: hidden;
+        -webkit-box-shadow: 0px 0px 20px rgba(0,0,0,0.7); 
+        -webkit-border-bottom-right-radius:10px;
+        border:1px solid rgba(255,255,255,0.2);
       }
       input {
-        font-size: 20px;
-        padding: 5px;
+        font-size: 14px;
+        padding: 0px 5px;
         width: 180px;
       }
       #photos img {
@@ -35,43 +35,35 @@
         left: 864px;
         top: 0px;
         z-index: 0;
+        -webkit-box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+        border:1px solid rgba(255,255,255,0.3);
       }
       form {
-        position: absolute;
         z-index:1000;
       }
       #clear {
-        position: absolute;
-        right: 0;
-        top: 0;
         margin: 3px;
-        padding: 10px;
-        font-size: 20px;
+        padding: 2px 10px;
+        font-size: 14px;
         background: #800;
         color: #fff;
         cursor: pointer;
       }
       #fetch {
-        position: absolute;
-        left: 200px;
-        top: 0;
-        width: 170px;
         margin: 3px;
-        padding: 10px;
-        font-size: 20px;
+        padding: 2px 10px;
+        font-size: 14px;
         background: rgba(0,80,0,0.5);
         color: #fff;
         cursor: pointer;
       }
       #header {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        margin-left: -432px;
-        margin-top: -240px;
+        position:absolute; 
+        top:0px;
         width: 864px;
-        background: rgba(0,0,0,0.5);
-        height: 42px;
+        padding:0px 10px;
+        background: rgba(0,0,0,0.3);
+        -webkit-box-shadow: 1px 0px 5px rgba(0,0,0,0.3);
         z-index: 99999999;
       }
       #header.loading {
@@ -81,31 +73,47 @@
       }
       #info {
         position: absolute;
-        top: 450px;
-        width: 854px;
+        bottom:0px;
         padding: 5px;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.3);
         color: #fff;
         font-size: 18px;
         height: 42px;
+        width:100%;
       }
       #info a {
         color: #fff;
         text-decoration: none;
       }
+      #logo {
+        width:4em;
+        text-align:center;
+        margin-left:15px;
+        padding:2px;
+        font-size:14px;
+        font-family:"Arial";
+        background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#cc9900), to(#fe6));
+        -webkit-box-shadow: 0px 0px 20px rgba(0,0,0,0.7);
+        color:#000;
+      }
     </style>
     <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
   </head>   
   <body>
+    <div id="logo">collog</div>
     <div id="debug"></div>
     <div id="content">
+      
+      <div id="header">
+        <form onsubmit="processForm();return false">
+          <input type="text" name="q" id="q" value="Summer" /> 
+          <span id="fetch" onclick="processForm()">Grab from flickr!</span>
+          <span id="clear">clear</span>
+        </form>
+      </div>
+      
       <div id="photos"></div>
-    </div>
-    <div id="header">
-      <form onsubmit="processForm();return false">
-        <input type="text" name="q" id="q" value="Summer" /> <div id="fetch" onclick="processForm()">Grab from flickr!</div>
-      </form>
-      <div id="clear">clear</div>
+      
       <div id="info">Touch an image to select and manipulate.</div>
     </div>
     <script type="text/javascript">
