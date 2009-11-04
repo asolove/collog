@@ -14,11 +14,16 @@
         background:#333; 
         overflow:hidden;
       }
-      #content {
-        position: absolute;
+      #my-collages {
+		}
+	  #inspiration { 
+		margin-left:550px;
+		}
+	  .collage {
+		position:absolute;
         margin:15px;
         width: 500px;
-        height: 95%%;
+        height: 500px;
         background:#222;
         overflow: hidden;
         -webkit-box-shadow: 0px 0px 20px rgba(0,0,0,0.7); 
@@ -26,11 +31,13 @@
         border:1px solid rgba(255,255,255,0.2);
       }
       input {
-        font-size: 14px;
-        padding: 0px 5px;
+        font-size: 18px;
+		background-color: #111;
+		border:1px solid #000;
+		color:#fff;
         width: 180px;
       }
-      #photos img {
+      .photos img {
         position: absolute;
         left: 864px;
         top: 0px;
@@ -41,7 +48,7 @@
       form {
         z-index:1000;
       }
-      #clear {
+      .clear {
         margin: 3px;
         padding: 2px 10px;
         font-size: 14px;
@@ -49,7 +56,7 @@
         color: #fff;
         cursor: pointer;
       }
-      #fetch {
+      .fetch {
         margin: 3px;
         padding: 2px 10px;
         font-size: 14px;
@@ -57,7 +64,7 @@
         color: #fff;
         cursor: pointer;
       }
-      #header {
+      .header {
         position:absolute; 
         top:0px;
         width: 864px;
@@ -66,22 +73,22 @@
         -webkit-box-shadow: 1px 0px 5px rgba(0,0,0,0.3);
         z-index: 99999999;
       }
-      #header.loading {
+      .header.loading {
         background-image: url(loading.gif);
         background-repeat: no-repeat;
         background-position: center center;
       }
-      #info {
+      .info {
         position: absolute;
         bottom:0px;
         padding: 5px;
         background: rgba(0,0,0,0.3);
         color: #fff;
-        font-size: 18px;
-        height: 42px;
+        font-size: 12px;
+        height: 16px;
         width:100%;
       }
-      #info a {
+      .info a {
         color: #fff;
         text-decoration: none;
       }
@@ -100,27 +107,106 @@
     <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
   </head>   
   <body>
+	
     <div id="logo">collog</div>
     <div id="debug"></div>
-    <div id="content">
+
+    <div id="my-collages">
+      <div class="collage">
+      	<div class="header">
+      	  <form onsubmit="processForm();return false">
+      	    <input type="text" name="q" class="q" value="Summer" /> 
+      	    <span class="fetch" onclick="processForm()">Save</span>
+      	  </form>
+      	</div>
       
-      <div id="header">
-        <form onsubmit="processForm();return false">
-          <input type="text" name="q" id="q" value="Summer" /> 
-          <span id="fetch" onclick="processForm()">Grab from flickr!</span>
-          <span id="clear">clear</span>
-        </form>
-      </div>
-      
-      <div id="photos"></div>
-      
-      <div id="info">Touch an image to select and manipulate.</div>
+      	<div class="photos"></div>
+      	
+      	<div class="info">Touch an image to select and manipulate.</div>
+	  </div>	
     </div>
+
+	<div id="inspiration">
+      <div class="collage">
+      	<div class="header">
+      	  <form onsubmit="processForm();return false">
+      	    <input type="text" name="q" class="q" value="Summer" /> 
+      	    <span class="fetch" onclick="processForm()">Grab from flickr!</span>
+      	    <span class="clear">clear</span>
+      	  </form>
+      	</div>
+      
+      	<div class="photos"></div>
+      	
+      	<div class="info">Touch an image to select and manipulate.</div>
+	  </div>
+	</div>
+
     <script type="text/javascript">
       S2.enableMultitouchSupport = true;
     
       (function(exp){
-        var r = Math.random;
+        var r = Math.random,
+			      subElement = function(sel) {
+			      	return function(self) {
+			      		return Selector.findElement(self, sel);
+			      	};
+			      },
+			      subElements = function(sel) {
+			      	return function(self) {
+			      		return Selector.findChildElements(self, sel);
+			      	};
+			      },
+			      Collage = Object.extend(Element, {
+			      	photoE:  subElement(".photos"),
+			      	imageEs: subElements(".photos img"),
+			      	headerE: subElement(".header"),
+			      	clearE:  subElement(".clear"),
+			      	infoE:   subElement(".info"),
+			      	newImage: function(self, img) {
+			      	  var image = new Element('img', { src: img.photo.media.m }), 
+                  x=img.x, y=img.y, z=img.z, t=img["-webkit-transform"], pos=[x,y,]
+                image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+z+";-webkit-transform:"+t;
+                return image;
+			      	},
+			      	insertImage: function(self, img) {
+                self.photoE().insert(image);
+			      	},
+			      	initialize: function(self, data) {
+	              data.images.each(function(img) {
+	                self.insertImage(self.newImage(img));
+	              });
+			      	}
+			      }),
+			      
+			      EditableCollage = Object.extend(Collage, {
+			        addEvents: function(self, img) {
+			          
+			        },
+			        newImage: function(self, img) {
+			          super(img);
+			          return self.addEvents(img);
+			        }
+			        serialize: function(self) {
+  		      		return {
+  		      	    name: "My collage",
+  		      	    images: $$('#photos img').map(function(img){
+  		      	              return { 
+  		      	                photo: img.photo,
+  		      	                x: img.style.left,
+  		      	                y: img.style.top,
+  		      	                z: img.style.zIndex,
+  		      	                "-webkit-transform": img.style["-webkit-transform"]
+  		      	              };
+  		      	            })
+  		      	  };
+			        }
+			      });
+			
+			
+			
+			
+			
         
         function processForm(){
           var url = 'http://api.flickr.com/services/feeds/'+
@@ -134,7 +220,6 @@
         var FRICTION = 5, z = 0, lastPhoto;
         function addEvents(img, pos){
           img.observe('manipulate:update', function(event){
-            console.log(pos[0], event.memo.panX);
             img.style.cssText += 
               ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
             img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
@@ -151,28 +236,7 @@
                         // }
           });
         }
-        function serialize() {
-          return {
-            name: "My collage",
-            images: $$('#photos img').map(function(img){
-                      return { 
-                        photo: img.photo,
-                        x: img.style.left,
-                        y: img.style.top,
-                        z: img.style.zIndex,
-                        "-webkit-transform": img.style["-webkit-transform"]
-                      };
-                    })
-          };
-        }
-        function deserialize(data) {
-          data.images.each(function(img) {
-            var image = new Element('img', { src: img.photo.media.m }), 
-              x=img.x, y=img.y, z=img.z, t=img["-webkit-transform"], pos=[x,y,]
-            image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+z+";-webkit-transform:"+t;
-            $('photos').insert(image);
-          });
-        }
+        
         function processData(data){
           data.items.sortBy(r).each(function(photo,idx){
             if(idx>5) return;
