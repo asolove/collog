@@ -87,6 +87,7 @@
         font-size: 12px;
         height: 16px;
         width:100%;
+        z-index: 99999999;
       }
       .info a {
         color: #fff;
@@ -177,15 +178,20 @@
                       after: function(){ Element.remove(photo); } });
                   });
 			          })
+			          
+			          this.inputE().observe("click", function(){
+			            console.log("clicking on input");
+			            that.inputE().focus();
+			          });
 			        },
 			      	
 			      	
 			        fetchPictures: function(){
-                var url = 'http://api.flickr.com/services/feeds/'+
-                  'photos_public.gne?format=json&tags='+
-                  encodeURIComponent(this.inputE().getValue())+
-                  '&tags_mode=ANY&nojsoncallback=1',
-                    that = this;
+                var that = this,
+                    url = 'http://api.flickr.com/services/feeds/'+
+                          'photos_public.gne?format=json&tags='+
+                          encodeURIComponent(this.inputE().getValue())+
+                          '&tags_mode=ANY&nojsoncallback=1';
                   
                 new Ajax.Request(url, {
                   method:'get',
@@ -199,11 +205,17 @@
 			        
 			        processData: function(data) {
 			          var that = this;
+			          console.log("got data")
                 data.items.sortBy(r).each(function(photo,idx){
                   if(idx>5) return;
-                  var pos = [r()*750, r()*150, r()*1-0.5, photo];
+                  var pos = [r()*500-50, r()*500-100, r()*1-0.5, photo],
+                      image = that.newImage(photo);
+                  console.log("inserting image");
                   that.photoE().insert(image);
-                  console.log(that, image);
+                  console.log("inserted image")
+                  that.addImageEvents(image, pos);
+                  
+                  console.log("added events")
                   image.style.cssText += ';top:'+((r()*700)-300)+'px;z-index:'+(z++);
                   image.transform({ rotation: pos[2] });
                   image.photo = photo;
@@ -212,15 +224,15 @@
                     'top:'+pos[1]+'px',{
                       duration:0.2+r()*1.5,delay:idx*0.2
                   });
-                  //addEvents(image, pos);
                 });
 			        },
-			        
 			      	
-			      	newImage: function(img) {
-			      	  var image = new Element('img', { src: img.photo.media.m }), 
-                  x=img.x, y=img.y, z=img.z, t=img["-webkit-transform"], pos=[x,y]; // FIXME
-                image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+z+";-webkit-transform:"+t;
+			      	newImage: function(photo) {
+			      	  console.log("in new image", photo);
+			      	  var image = new Element('img', { src: photo.media.m }), 
+			      	      x = r()*500-50, y = -200, z=0, t=0;
+                  // deserialize: x=photo.x, y=photo.y, z=photo.z, t=photo["-webkit-transform"], pos=[x,y]; // FIXME
+                image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+ z++ +";-webkit-transform:"+t;
                 return image;
 			      	},
 			      	insertImage: function(img) {
@@ -231,8 +243,19 @@
                   this.insertImage(self.newImage(img));
                 });
               },
-			        addEvents: function(img) {
-			          
+			        addImageEvents: function(img, pos) {
+			          img.observe('manipulate:update', function(event){
+			            if(event.memo.scale < 0.2) {
+			              img.remove();
+			              return;
+			            }
+                  img.style.cssText += 
+                    ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
+                  img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
+                  img._x = pos[0]+event.memo.panX;
+                  img._y = pos[1]+event.memo.panY;
+                  event.stop();
+                });
 			        },
 			        serialize: function() {
   		      		return {
@@ -278,10 +301,5 @@
         
     </script>
     
-    <script type="text/javascript">
-      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">try{var pageTracker=_gat._getTracker("UA-2732152-10");pageTracker._trackPageview();}catch(err){}</script>
   </body>
 </html>
