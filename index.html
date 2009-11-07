@@ -25,7 +25,6 @@
       width: 500px;
       height: 500px;
       background:#222;
-      overflow: hidden;
       -webkit-box-shadow: 0px 0px 20px rgba(0,0,0,0.7); 
       -webkit-border-bottom-right-radius:10px;
       border:1px solid #555;
@@ -144,160 +143,136 @@
 	</div>
 
     <script type="text/javascript">
+    (function() {
       S2.enableMultitouchSupport = true;
-    
-        var r = Math.random,
-			      subElement = function(sel) {
-			      	return function(self) { return Selector.findChildElements(this.el, [sel])[0]; };
-			      },
-			      subElements = function(sel) {
-			      	return function(self) { return Selector.findChildElements(this.el, [sel]); };
-			      },
-			      
-			      FlickrCollage = Class.create({
-			        inputE:  subElement(".q"),
-			        fetchE:  subElement(".fetch"),
-			        photoE:  subElement(".photos"),
-			      	imageEs: subElements(".photos img"),
-			      	headerE: subElement(".header"),
-			      	clearE:  subElement(".clear"),
-			      	infoE:   subElement(".info"), 
-			      	
-			      	initialize: function(el) {
-			      	  this.el = el;
-			      	  this.attachEvents();
-			      	},
-			      	
-			        attachEvents: function() {
-			          var that = this;
-			          this.fetchE().observe("click", function() { that.fetchPictures(); })
-			          
-			          this.clearE().observe("click", function() {
-			            that.imageEs().each(function(photo){
-                    photo.morph('left:-500px;top:'+(r()*600)+'px',{ duration: 0.3,
-                      after: function(){ Element.remove(photo); } });
-                  });
-			          })
-			          
-			          this.inputE().observe("click", function(){
-			            console.log("clicking on input");
-			            that.inputE().focus();
-			          });
-			        },
-			      	
-			      	
-			        fetchPictures: function(){
-                var that = this,
-                    url = 'http://api.flickr.com/services/feeds/'+
-                          'photos_public.gne?format=json&tags='+
-                          encodeURIComponent(this.inputE().getValue())+
-                          '&tags_mode=ANY&nojsoncallback=1';
-                  
-                new Ajax.Request(url, {
-                  method:'get',
-                  onSuccess: function(response) {
-                    that.processData(response.responseText.evalJSON());
-                    that.headerE().removeClassName('loading');
-                  }
-                });
-                this.headerE().addClassName('loading');
-			        },
-			        
-			        processData: function(data) {
-			          var that = this;
-			          console.log("got data")
-                data.items.sortBy(r).each(function(photo,idx){
-                  if(idx>5) return;
-                  var pos = [r()*500-50, r()*500-100, r()*1-0.5, photo],
-                      image = that.newImage(photo);
-                  console.log("inserting image");
-                  that.photoE().insert(image);
-                  console.log("inserted image")
-                  that.addImageEvents(image, pos);
-                  
-                  console.log("added events")
-                  image.style.cssText += ';top:'+((r()*700)-300)+'px;z-index:'+(z++);
-                  image.transform({ rotation: pos[2] });
-                  image.photo = photo;
-                  image.morph(
-                    'left:'+pos[0]+'px;'+
-                    'top:'+pos[1]+'px',{
-                      duration:0.2+r()*1.5,delay:idx*0.2
-                  });
-                });
-			        },
-			      	
-			      	newImage: function(photo) {
-			      	  console.log("in new image", photo);
-			      	  var image = new Element('img', { src: photo.media.m }), 
-			      	      x = r()*500-50, y = -200, z=0, t=0;
-                  // deserialize: x=photo.x, y=photo.y, z=photo.z, t=photo["-webkit-transform"], pos=[x,y]; // FIXME
-                image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+ z++ +";-webkit-transform:"+t;
-                return image;
-			      	},
-			      	insertImage: function(img) {
-                this.photoE().insert(image);
-			      	},
-			      	deserialize: function(data) {
-                data.images.each(function(img) {
-                  this.insertImage(self.newImage(img));
-                });
-              },
-			        addImageEvents: function(img, pos) {
-			          img.observe('manipulate:update', function(event){
-			            if(event.memo.scale < 0.2) {
-			              img.remove();
-			              return;
-			            }
-                  img.style.cssText += 
-                    ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
-                  img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
-                  img._x = pos[0]+event.memo.panX;
-                  img._y = pos[1]+event.memo.panY;
-                  event.stop();
-                });
-			        },
-			        serialize: function() {
-  		      		return {
-  		      	    name: "My collage",
-  		      	    images: $$('#photos img').map(function(img){
-  		      	              return { 
-  		      	                photo: img.photo,
-  		      	                x: img.style.left,
-  		      	                y: img.style.top,
-  		      	                z: img.style.zIndex,
-  		      	                "-webkit-transform": img.style["-webkit-transform"]
-  		      	              };
-  		      	            })
-  		      	  };
-		      	  } 
-			      });
-			
-			  document.observe("dom:loaded", function(){
-			    fc = new FlickrCollage($("collage_1"))
-			  })
-			
-			
-			
-        var FRICTION = 5, z = 0, lastPhoto;
-        function addEvents(img, pos){
-          img.observe('manipulate:update', function(event){
+      var r = Math.random,
+			    subElement = function(sel) {
+			    	return function(self) { return Selector.findChildElements(this.el, [sel])[0]; };
+			    },
+			    subElements = function(sel) {
+			    	return function(self) { return Selector.findChildElements(this.el, [sel]); };
+			    };
+			    
+      Collog = {};
+			    
+			Collog.FlickrCollage = Class.create({
+			  inputE:  subElement(".q"),
+			  fetchE:  subElement(".fetch"),
+			  photoE:  subElement(".photos"),
+				imageEs: subElements(".photos img"),
+				headerE: subElement(".header"),
+				clearE:  subElement(".clear"),
+				infoE:   subElement(".info"), 
+				initialize: function(el) {
+				  this.el = el;
+				  this.attachEvents();
+				},
+			  attachEvents: function() {
+			    var that = this;
+			    this.fetchE().observe("click", function() { that.fetchPictures(); })
+			    this.clearE().observe("click", function() {
+			      that.imageEs().each(function(photo){
+              photo.morph('top:-500px;left:'+(r()*500-100)+'px',{ duration: 0.3,
+                after: function(){ Element.remove(photo); } });
+            });
+			    })
+			    this.inputE().observe("click", function(){ that.inputE().focus(); });
+			  },
+			  fetchPictures: function(){
+          var that = this, url = 'http://api.flickr.com/services/feeds/photos_public.gne?format=json&tags='+
+                    encodeURIComponent(this.inputE().getValue())+
+                    '&tags_mode=ANY&nojsoncallback=1';
+          new Ajax.Request(url, { method:'get',
+            onSuccess: function(response) {
+              that.processData(response.responseText.evalJSON());
+              that.headerE().removeClassName('loading');
+            }
+          });
+          this.headerE().addClassName('loading');
+			  },
+			  processData: function(data) {
+			    var that = this;
+          data.items.sortBy(r).each(function(photo,idx){
+            if(idx>5) return;
+            var pos = [r()*300-50, r()*500-100, r()*1-0.5, photo],
+                image = that.newImage(photo);
+            that.photoE().insert(image);
+            that.addImageEvents(image, pos);
+            
+            image.style.cssText += ';top:-500px;z-index:'+(z++);
+            image.transform({ rotation: pos[2] });
+            image.photo = photo;
+            image.morph(
+              'left:'+pos[0]+'px;'+
+              'top:'+pos[1]+'px',{
+                duration:0.2+r()*1.5,delay:idx*0.2
+            });
+          });
+			  },
+				newImage: function(photo) {
+				  var image = new Element('img', { src: photo.media.m }), 
+				      x = r()*500-50, y = -200, z=0, t=0;
+            // deserialize: x=photo.x, y=photo.y, z=photo.z, t=photo["-webkit-transform"], pos=[x,y]; // FIXME
+          image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+ z++ +";-webkit-transform:"+t;
+          return image;
+				},
+				insertImage: function(img) {
+          this.photoE().insert(image);
+				},
+				deserialize: function(data) {
+          data.images.each(function(img) {
+            this.insertImage(self.newImage(img));
+          });
+        },
+			  addImageEvents: function(img, pos) {
+			    var that = this;
+			    // after manipulations finish
+			    img.observe("mouseup", function(event) { 
+			      if(event.x < -100) { 
+			        that.insertIn(img, $$("#my-collages .photos")[0])
+			      }
+			    });
+			    img.observe('manipulate:update', function(event){
             img.style.cssText += 
               ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
             img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
             img._x = pos[0]+event.memo.panX;
             img._y = pos[1]+event.memo.panY;
+            
+			      if(event.memo.scale < 0.2) { img.remove(); return; }
             event.stop();
-                        // 
-                        // if(!lastPhoto || !(lastPhoto==img)){
-                        //   lastPhoto = img;
-                        //   $('info').innerHTML =
-                        //     '<a href="'+pos[3].link+'">'+
-                        //     '<b>“'+pos[3].title.escapeHTML()+'”</b> by '+
-                        //     '<b>'+pos[3].author.gsub(/^(.*)\(/,'').gsub(/\)$/,'').escapeHTML()+'</b></a>';
-                        // }
           });
-        }
+			  },
+			  insertIn: function(img, newParent) {
+			    console.info("inserting", img, newParent)
+			    var imgOffset = img.cumulativeOffset(), parentOffset = newParent.cumulativeOffset();
+          img.remove;
+          img.setStyle({left: imgOffset[0]-parentOffset[0], top: imgOffset[1]-parentOffset[1]})
+          $(newParent).insert(img);
+          console.log(imgOffset, parentOffset);
+          console.info()
+			  },
+			  serialize: function() {
+  				return {
+  			    name: "My collage",
+  			    images: $$('#photos img').map(function(img){
+  			              return { 
+  			                photo: img.photo,
+  			                x: img.style.left,
+  			                y: img.style.top,
+  			                z: img.style.zIndex,
+  			                "-webkit-transform": img.style["-webkit-transform"]
+  			              };
+  			            })
+  			  };
+		    } 
+			});
+			
+			document.observe("dom:loaded", function(){
+			  console.info("new fc")
+			  fc = new Collog.FlickrCollage($("collage_1"))
+			});
+    })();
         
     </script>
     

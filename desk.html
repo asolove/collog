@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Collog</title>
+  
+  <script src="prototype.s2.min.js" type="text/javascript"></script>
+  
+<style>
+html, body, div, p { margin:0px; padding:0px;}
+body { overflow: hidden;}
+
+#desk-container { position:fixed; bottom:0px; height:100px; width:100%;}
+#desk { overflow:hidden; z-index:9999; position:fixed; -webkit-box-shadow: 2px 2px 20px rgba(0,0,0,0.2); background-color: #444; background-color: rgba(102,102,102,0.3); bottom:0px; left:0px; right:0px; height:50px; -webkit-transition: height .2s ease; border-top:1px solid #666;}
+#desk:hover, #desk.hover {height:150px;}
+ 
+#desk img {
+ position: absolute;
+ z-index: 0;
+ -webkit-box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+ border:1px solid rgba(255,255,255,0.3);
+ }
+
+.collage { background-color:#222; height:1000px; width:100%;}
+.collage .header { 
+  position:absolute; width:100%;background-color: rgba(102,102,102,0.3);-webkit-box-shadow: 2px 2px 20px rgba(0,0,0,0.2); border-bottom:1px solid #666; z-index:9999999999;}
+
+
+input {
+font-size: 18px;
+background-color: #555;
+border:0px solid #000;
+color:#fff;
+width: 180px;
+}
+.photos img {
+position: absolute;
+left: 864px;
+top: 0px;
+z-index: 0;
+-webkit-box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+border:1px solid rgba(255,255,255,0.3);
+}
+form {
+  z-index:1000;
+}
+.clear {
+  margin: 3px;
+  padding: 2px 10px;
+  font-size: 14px;
+  background: #800;
+  color: #fff;
+  cursor: pointer;
+}
+.fetch {
+  margin: 3px;
+  padding: 2px 10px;
+  font-size: 14px;
+  background: rgba(0,80,0,0.5);
+  color: #fff;
+  cursor: pointer;
+}
+.header.loading {
+  background-image: url(loading.gif);
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+</style>
+</head>
+<body>
+  
+<div id="collage-no-id" class="flickr collage">
+  <div class="header">
+    <form>
+      <input type="text" name="q" class="q" value="Summer" /> 
+      <span id="fetch" class="fetch">Go!</span>
+      <span class="clear">clear</span>
+    </form>
+  </div>
+  <div class="photos"></div>
+</div>
+
+<div id="desk-container">
+<div id="desk">
+  
+</div>
+</div>
+
+<script type="text/javascript">
+  S2.enableMultitouchSupport = true;
+  var r = Math.random, z=1, overdesk=false;
+	    subElement = function(sel) {
+	    	return function(self) { return Selector.findChildElements(this.el, [sel])[0]; };
+	    },
+	    subElements = function(sel) {
+	    	return function(self) { return Selector.findChildElements(this.el, [sel]); };
+	    };
+	    
+  FlickrCollage = Class.create({
+	  inputE:  subElement(".q"),
+	  fetchE:  subElement(".fetch"),
+	  photoE:  subElement(".photos"),
+		imageEs: subElements(".photos img"),
+		headerE: subElement(".header"),
+		clearE:  subElement(".clear"),
+		infoE:   subElement(".info"), 
+		initialize: function(el) {
+		  this.el = el;
+		  this.attachEvents();
+		},
+	  attachEvents: function() {
+	    var that = this;
+	    this.fetchE().observe("click", function() { that.fetchPictures(); })
+	    this.clearE().observe("click", function() {
+	      that.imageEs().each(function(photo){
+          photo.morph('top:-500px;left:'+(r()*500-100)+'px',{ duration: 0.3,
+            after: function(){ Element.remove(photo); } });
+        });
+	    })
+	    this.inputE().observe("click", function(){ that.inputE().focus(); });
+	  },
+	  fetchPictures: function(){
+      var that = this, url = 'http://api.flickr.com/services/feeds/photos_public.gne?format=json&tags='+
+                encodeURIComponent(this.inputE().getValue())+
+                '&tags_mode=ANY&nojsoncallback=1';
+      new Ajax.Request(url, { method:'get',
+        onSuccess: function(response) {
+          that.processData(response.responseText.evalJSON());
+          that.headerE().removeClassName('loading');
+        }
+      });
+      this.headerE().addClassName('loading');
+	  },
+	  processData: function(data) {
+	    var that = this;
+      data.items.sortBy(r).each(function(photo,idx){
+        if(idx>10) return;
+        var image = that.newImage(photo),
+            pos = [r()*800, r()*500+50, r()*1-0.5, photo];
+        image.store("pos", pos);
+        that.photoE().insert(image);
+        that.addImageEvents(image);
+        
+        image.style.cssText += 'left:0px;top:-500px;z-index:'+(z++);
+        image.transform({ rotation: pos[2] });
+        image.morph(
+          'left:'+pos[0]+'px;'+
+          'top:'+pos[1]+'px',{
+            duration:0.2+r()*1.5,delay:idx*0.2
+        });
+      });
+	  },
+		newImage: function(photo) {
+		  var image = new Element('img', { src: photo.media.m }), 
+		      x = r()*500-50, y = -200, z=0, t=0;
+        // deserialize: x=photo.x, y=photo.y, z=photo.z, t=photo["-webkit-transform"], pos=[x,y]; // FIXME
+      image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+ z++ +";-webkit-transform:"+t;
+      return image;
+		},
+		insertImage: function(img) {
+      this.photoE().insert(image);
+		},
+		deserialize: function(data) {
+      data.images.each(function(img) {
+        this.insertImage(self.newImage(img));
+      });
+    },
+	  addImageEvents: function(img) {
+	    var that = this;
+	    img.observe('manipulate:update', function(event){
+	      pos = img.retrieve("pos");
+        img.style.cssText += 
+          ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
+        img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
+        img._x = pos[0]+event.memo.panX;
+        img._y = pos[1]+event.memo.panY;
+        
+	      if(event.memo.scale < 0.2) { img.remove(); return; }
+	      if(img._y > $("desk-container").cumulativeOffset()[1]) {
+	        console.log("over desk container")
+	        $("desk").addClassName("hover");
+	      }
+	      if(img._y > $("desk").cumulativeOffset()[1]) { 
+	        $("desk").addClassName("hover");
+	        that.insertIn(img, $("desk"));
+	      }
+        event.stop();
+      });
+	  },
+	  insertIn: function(img, newParent) {
+	    var pos = img.retrieve("pos");
+	    pos[1] -= newParent.cumulativeOffset()[1];
+	    img.store("pos", pos);
+	    img.remove;
+      $(newParent).insert(img);
+	  },
+	  serialize: function() {
+			return {
+		    name: "My collage",
+		    images: $$('#photos img').map(function(img){
+		              return { 
+		                photo: img.photo,
+		                x: img.style.left,
+		                y: img.style.top,
+		                z: img.style.zIndex,
+		                "-webkit-transform": img.style["-webkit-transform"]
+		              };
+		            })
+		  };
+    } 
+	});
+	
+	document.observe("dom:loaded", function(){
+	  fc = new FlickrCollage($("collage_1"))
+
+    // desk-container is layered behind images. If the mouse is close
+    // to the desk and over empty space, we move the desk out early.
+    // If there is an image, we don't.
+	  $("desk-container").observe("mouseover", function(event){
+	    overDesk = true;
+	    $("desk").addClassName("hover")
+	  })
+	  
+	  $("desk-container").observe("mouseout", function(event){
+	    overDesk = false;
+	    $("desk").removeClassName("hover");
+	  })
+	});
+    
+</script>
+
+</body>
+</html>
