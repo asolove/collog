@@ -1,280 +1,167 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-        "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
-  <head>
-    <title>scripty2 demo | Flickr Touchshow</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <script src="prototype.s2.min.js" type="text/javascript"></script>
-    
-    <style type="text/css" media="screen">
-      body { 
-        font: 12px/15px Arial, serif; 
-        margin: 0; 
-        background:#333; 
-        overflow:hidden;
-      }
-      #my-collages {
-		}
-	  #inspiration { 
-		  margin-left:550px;
-		}
-	  .collage {
-		  position:absolute;
-      margin:15px;
-      width: 500px;
-      height: 500px;
-      background:#222;
-      -webkit-box-shadow: 0px 0px 20px rgba(0,0,0,0.7); 
-      -webkit-border-bottom-right-radius:10px;
-      border:1px solid #555;
-      }
-    input {
-      font-size: 18px;
-		  background-color: #111;
-		  border:1px solid #000;
-		  color:#fff;
-      width: 180px;
-      }
-    .photos img {
-      position: absolute;
-      left: 864px;
-      top: 0px;
-      z-index: 0;
-      -webkit-box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
-      border:1px solid rgba(255,255,255,0.3);
-      }
-      form {
-        z-index:1000;
-      }
-      .clear {
-        margin: 3px;
-        padding: 2px 10px;
-        font-size: 14px;
-        background: #800;
-        color: #fff;
-        cursor: pointer;
-      }
-      .fetch {
-        margin: 3px;
-        padding: 2px 10px;
-        font-size: 14px;
-        background: rgba(0,80,0,0.5);
-        color: #fff;
-        cursor: pointer;
-      }
-      .header {
-        position:absolute; 
-        top:0px;
-        width: 864px;
-        padding:0px 10px;
-        background: rgba(0,0,0,0.3);
-        -webkit-box-shadow: 1px 0px 5px rgba(0,0,0,0.3);
-        z-index: 99999999;
-      }
-      .header.loading {
-        background-image: url(loading.gif);
-        background-repeat: no-repeat;
-        background-position: center center;
-      }
-      .info {
-        position: absolute;
-        bottom:0px;
-        padding: 5px;
-        background: rgba(0,0,0,0.3);
-        color: #fff;
-        font-size: 12px;
-        height: 16px;
-        width:100%;
-        z-index: 99999999;
-      }
-      .info a {
-        color: #fff;
-        text-decoration: none;
-      }
-      #logo {
-        width:4em;
-        text-align:center;
-        margin-left:15px;
-        padding:2px;
-        font-size:14px;
-        font-family:"Arial";
-        background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#cc9900), to(#fe6));
-        -webkit-box-shadow: 0px 0px 20px rgba(0,0,0,0.7);
-        color:#000;
-      }
-    </style>
-    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
-  </head>   
-  <body>
-	
-    <div id="logo">collog</div>
-    <div id="debug"></div>
+<html>
+<head>
+<title></title>
+<style>
+body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
 
-    <div id="my-collages">
-      <div class="collage">
-      	<div class="header">
-      	  <form>
-      	    <input type="text" name="q" class="q" value="Summer" /> 
-      	    <span class="fetch">Save</span>
-      	  </form>
-      	</div>
-      
-      	<div class="photos"></div>
-      	
-      	<div class="info">Touch an image to select and manipulate.</div>
-	  </div>	
+.collage { 
+  float:left; margin-right:10px;
+  position:relative; width: 400px; height:500px; border:1px solid #887;             
+  background-color:#f8f8f0;}
+  
+.header { z-index:1000; position:absolute;background-color: rgba(0,0,0,0.2); width:100%; height:25px;}
+
+.collage .photos {
+  position:relative; top:0px; left:0px;
+  width:400px; height:500px;
+  overflow:hidden;
+}
+
+.collage img { position: absolute; width:25%; }
+</style>
+</head>
+<body>
+  <div class="collage" id="flickr_collage">
+    <div class="header">
+      <form>
+        <input type="text" name="q" class="q" value="Search flickr" /> 
+        <input type="submit" value="Go!" class="fetch"/>
+      </form>
     </div>
+    <div class="photos"></div>
+  </div>
+  
+  
+  <div class="collage" id="flickr_collage_2">
+    <div class="header">
+      <form>
+        <input type="text" name="q" class="q" value="Search flickr" /> 
+        <input type="submit" value="Go!" class="fetch"/>
+      </form>
+    </div>
+    <div class="photos"></div>
+  </div>
+  
+<script src="prototype.s2.min.js" type="text/javascript"></script>
 
-	<div id="inspiration">
-      <div class="collage" id="collage_1">
-      	<div class="header">
-      	  <form>
-      	    <input type="text" name="q" class="q" value="Summer" /> 
-      	    <span class="fetch">Go!</span>
-      	    <span class="clear">clear</span>
-      	  </form>
-      	</div>
-      
-      	<div class="photos"></div>
-      	
-      	<div class="info">Touch an image to select and manipulate.</div>
-	  </div>
-	</div>
-
-    <script type="text/javascript">
-    (function() {
-      S2.enableMultitouchSupport = true;
-      var r = Math.random,
-			    subElement = function(sel) {
-			    	return function(self) { return Selector.findChildElements(this.el, [sel])[0]; };
-			    },
-			    subElements = function(sel) {
-			    	return function(self) { return Selector.findChildElements(this.el, [sel]); };
-			    };
-			    
-      Collog = {};
-			    
-			Collog.FlickrCollage = Class.create({
-			  inputE:  subElement(".q"),
-			  fetchE:  subElement(".fetch"),
-			  photoE:  subElement(".photos"),
-				imageEs: subElements(".photos img"),
-				headerE: subElement(".header"),
-				clearE:  subElement(".clear"),
-				infoE:   subElement(".info"), 
-				initialize: function(el) {
-				  this.el = el;
-				  this.attachEvents();
-				},
-			  attachEvents: function() {
-			    var that = this;
-			    this.fetchE().observe("click", function() { that.fetchPictures(); })
-			    this.clearE().observe("click", function() {
-			      that.imageEs().each(function(photo){
-              photo.morph('top:-500px;left:'+(r()*500-100)+'px',{ duration: 0.3,
-                after: function(){ Element.remove(photo); } });
-            });
-			    })
-			    this.inputE().observe("click", function(){ that.inputE().focus(); });
-			  },
-			  fetchPictures: function(){
-          var that = this, url = 'http://api.flickr.com/services/feeds/photos_public.gne?format=json&tags='+
-                    encodeURIComponent(this.inputE().getValue())+
-                    '&tags_mode=ANY&nojsoncallback=1';
-          new Ajax.Request(url, { method:'get',
-            onSuccess: function(response) {
-              that.processData(response.responseText.evalJSON());
-              that.headerE().removeClassName('loading');
-            }
-          });
-          this.headerE().addClassName('loading');
-			  },
-			  processData: function(data) {
-			    var that = this;
-          data.items.sortBy(r).each(function(photo,idx){
-            if(idx>5) return;
-            var pos = [r()*300-50, r()*500-100, r()*1-0.5, photo],
-                image = that.newImage(photo);
-            that.photoE().insert(image);
-            that.addImageEvents(image, pos);
-            
-            image.style.cssText += ';top:-500px;z-index:'+(z++);
-            image.transform({ rotation: pos[2] });
-            image.photo = photo;
-            image.morph(
-              'left:'+pos[0]+'px;'+
-              'top:'+pos[1]+'px',{
-                duration:0.2+r()*1.5,delay:idx*0.2
-            });
-          });
-			  },
-				newImage: function(photo) {
-				  var image = new Element('img', { src: photo.media.m }), 
-				      x = r()*500-50, y = -200, z=0, t=0;
-            // deserialize: x=photo.x, y=photo.y, z=photo.z, t=photo["-webkit-transform"], pos=[x,y]; // FIXME
-          image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+ z++ +";-webkit-transform:"+t;
-          return image;
-				},
-				insertImage: function(img) {
-          this.photoE().insert(image);
-				},
-				deserialize: function(data) {
-          data.images.each(function(img) {
-            this.insertImage(self.newImage(img));
-          });
-        },
-			  addImageEvents: function(img, pos) {
-			    var that = this;
-			    // after manipulations finish
-			    img.observe("mouseup", function(event) { 
-			      if(event.x < -100) { 
-			        that.insertIn(img, $$("#my-collages .photos")[0])
-			      }
-			    });
-			    img.observe('manipulate:update', function(event){
-            img.style.cssText += 
-              ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
-            img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
-            img._x = pos[0]+event.memo.panX;
-            img._y = pos[1]+event.memo.panY;
-            
-			      if(event.memo.scale < 0.2) { img.remove(); return; }
-            event.stop();
-          });
-			  },
-			  insertIn: function(img, newParent) {
-			    console.info("inserting", img, newParent)
-			    var imgOffset = img.cumulativeOffset(), parentOffset = newParent.cumulativeOffset();
-          img.remove;
-          img.setStyle({left: imgOffset[0]-parentOffset[0], top: imgOffset[1]-parentOffset[1]})
-          $(newParent).insert(img);
-          console.log(imgOffset, parentOffset);
-          console.info()
-			  },
-			  serialize: function() {
-  				return {
-  			    name: "My collage",
-  			    images: $$('#photos img').map(function(img){
-  			              return { 
-  			                photo: img.photo,
-  			                x: img.style.left,
-  			                y: img.style.top,
-  			                z: img.style.zIndex,
-  			                "-webkit-transform": img.style["-webkit-transform"]
-  			              };
-  			            })
-  			  };
-		    } 
-			});
-			
-			document.observe("dom:loaded", function(){
-			  console.info("new fc")
-			  fc = new Collog.FlickrCollage($("collage_1"))
-			});
-    })();
+<script type="text/javascript">
+  // Setup
+  S2.enableMultitouchSupport = true;
+  
+  // App-wide variables
+	var r = Math.random, z=1, overCollage = document,
+	    subElement = function(sel) {
+	    	return function(self) { return Selector.findChildElements(this.el, [sel])[0]; };
+	    },
+	    subElements = function(sel) {
+	    	return function(self) { return Selector.findChildElements(this.el, [sel]); };
+	    },
+	    
+	    Collages = {
+    	  collages: [],
+    	  addCollage: function(c){
+    	    this.collages.push(c);
+    	  },
+    	  overCollage: function(e){
+    	    return this.collages.find(function(c){
+    	      var eOffset = e.cumulativeOffset(), x = eOffset[0], y = eOffset[1],
+    	          cOffset = c.el.cumulativeOffset(), top = cOffset[0], left = cOffset[1],
+    	          bottom = top + c.el.getHeight(), right = left+c.el.getWidth();
+    	      console.log(c.el.id, top, y, bottom, "|", left, x, right);
+    	      return y > top < bottom && x > left < right;
+  	      });
+    	  }
+    	};
+	    
+	    
+	// Collage classes
+  FlickrCollage = Class.create({
+	  inputE:  subElement(".q"),
+	  fetchE:  subElement(".fetch"),
+	  photoE:  subElement(".photos"),
+		imageEs: subElements(".photos img"),
+		headerE: subElement(".header"),
+		clearE:  subElement(".clear"),
+		infoE:   subElement(".info"), 
+		formE:   subElement("form"),
+		initialize: function(el) {
+		  this.el = el;
+	    this.fetchE().observe("click", (function(){this.fetchPictures();}).bind(this));
+	    this.inputE().observe("click", (function(){this.inputE().focus();}).bind(this));
+	    this.formE().observe("submit", (function(e){e.stop();this.el.fire("collage:fetch");}).bind(this));
+	    this.el.observe("collage:fetch", (function(e){e.stop();this.fetchPictures();}).bind(this));
+	    Collages.addCollage(this);
+		},
+	  fetchPictures: function(){
+      var that = this, url = 'http://api.flickr.com/services/feeds/photos_public.gne?format=json&tags='+
+                encodeURIComponent(this.inputE().getValue())+
+                '&tags_mode=ANY&nojsoncallback=1';
+      new Ajax.Request(url, { method:'get',
+        onSuccess: function(response) { that.processData(response.responseText.evalJSON()); }
+      });
+	  },
+	  processData: function(data) {
+	    var that = this;
+      data.items.each(function(photo,idx){
+        if(idx>10) return;
+        var image = that.newImage(photo),
+            pos = [r()*that.el.getHeight(), r()*that.el.getWidth(), r()*1-0.5, photo];
+        image.store("pos", pos);
+        image.alt = "'" + photo.title + "' by " + photo.author;
+        that.photoE().insert(image);
+        that.addImageEvents(image);
         
-    </script>
-    
-  </body>
+        image.style.cssText += 'left:0px;top:-500px;z-index:'+(z++);
+        image.transform({ rotation: pos[2] });
+        image.morph(
+          'left:'+pos[0]+'px;'+
+          'top:'+pos[1]+'px',{
+            duration:0.2+r()*1.5,delay:idx*0.2
+        });
+      });
+	  },
+		newImage: function(photo) {
+		  var image = new Element('img', { src: photo.media.m }), 
+		      x = r()*500-50, y = -200, z=0, t=0;
+        // deserialize: x=photo.x, y=photo.y, z=photo.z, t=photo["-webkit-transform"], pos=[x,y]; // FIXME
+      image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+ z++ +";-webkit-transform:"+t;
+      return image;
+		},
+		insertImage: function(img) {
+      this.photoE().insert(image);
+		},
+		deserialize: function(data) {
+      data.images.each(function(img) {
+        this.insertImage(self.newImage(img));
+      });
+    },
+	  addImageEvents: function(img) {
+	    var that = this;
+	    img.observe('manipulate:update', function(event){
+	      pos = img.retrieve("pos");
+        img.style.cssText += 
+          ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
+        img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
+        img._x = pos[0]+event.memo.panX;
+        img._y = pos[1]+event.memo.panY;
+        img._r = pos[2]+event.memo.rotation;
+        img._scale = event.memo.scale
+      
+	      if(event.memo.scale < 0.4) { img.remove(); return; }
+        event.stop();
+      });
+      
+	    img.observe("mousedown", function(e){ this.el.insert(e.element())}.bind(this));
+	    img.observe("mouseup", function(e){ Collages.overCollage(e.element()); });
+	  }
+	});
+	
+	// Initialize collages
+	
+	document.observe("dom:loaded", function(){
+	  fc  = new FlickrCollage($("flickr_collage"));
+  	fc2 = new FlickrCollage($("flickr_collage_2"));
+	});
+</script>
+</body>
 </html>

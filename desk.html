@@ -6,8 +6,13 @@
   <script src="prototype.s2.min.js" type="text/javascript"></script>
   
 <style>
-html, body, div, p { margin:0px; padding:0px;}
-body { overflow: hidden;}
+html, body, div, p { 
+  margin:0px; padding:0px;
+  }
+body { 
+  overflow: hidden;
+  font-family: helvetica, sans;
+  }
 
 #desk-container { position:fixed; bottom:0px; height:100px; width:100%;}
 #desk { overflow:hidden; z-index:9999; position:fixed; -webkit-box-shadow: 2px 2px 20px rgba(0,0,0,0.2); background-color: #444; background-color: rgba(102,102,102,0.3); bottom:0px; left:0px; right:0px; height:50px; -webkit-transition: height .2s ease; border-top:1px solid #666;}
@@ -19,10 +24,18 @@ body { overflow: hidden;}
  -webkit-box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
  border:1px solid rgba(255,255,255,0.3);
  }
+ 
+img:after {
+   content:attr(alt);
+ }
 
 .collage { background-color:#222; height:1000px; width:100%;}
 .collage .header { 
-  position:absolute; width:100%;background-color: rgba(102,102,102,0.3);-webkit-box-shadow: 2px 2px 20px rgba(0,0,0,0.2); border-bottom:1px solid #666; z-index:9999999999;}
+  position:absolute; width:100%;
+  background-color: rgba(102,102,102,0.3);-webkit-box-shadow: 2px 2px 20px rgba(0,0,0,0.2);
+  border-bottom:1px solid #666; z-index:9999999999; 
+  color:#fff;
+  }
 
 
 input {
@@ -71,9 +84,8 @@ form {
 <div id="collage-no-id" class="flickr collage">
   <div class="header">
     <form>
-      <input type="text" name="q" class="q" value="Summer" /> 
+      <input type="text" name="q" class="q" value="Search flickr" /> 
       <span id="fetch" class="fetch">Go!</span>
-      <span class="clear">clear</span>
     </form>
   </div>
   <div class="photos"></div>
@@ -81,7 +93,7 @@ form {
 
 <div id="desk-container">
 <div id="desk">
-  
+  <div id="desk-left-scroller" style="position:absolute; top:0px; left:0px; width:70px;height:200px; z-index:99999999"></div>
 </div>
 </div>
 
@@ -101,7 +113,7 @@ form {
 	  photoE:  subElement(".photos"),
 		imageEs: subElements(".photos img"),
 		headerE: subElement(".header"),
-		clearE:  subElement(".clear"),
+		// clearE:  subElement(".clear"),
 		infoE:   subElement(".info"), 
 		initialize: function(el) {
 		  this.el = el;
@@ -110,12 +122,6 @@ form {
 	  attachEvents: function() {
 	    var that = this;
 	    this.fetchE().observe("click", function() { that.fetchPictures(); })
-	    this.clearE().observe("click", function() {
-	      that.imageEs().each(function(photo){
-          photo.morph('top:-500px;left:'+(r()*500-100)+'px',{ duration: 0.3,
-            after: function(){ Element.remove(photo); } });
-        });
-	    })
 	    this.inputE().observe("click", function(){ that.inputE().focus(); });
 	  },
 	  fetchPictures: function(){
@@ -137,6 +143,7 @@ form {
         var image = that.newImage(photo),
             pos = [r()*800, r()*500+50, r()*1-0.5, photo];
         image.store("pos", pos);
+        image.alt = "'" + photo.title + "' by " + photo.author;
         that.photoE().insert(image);
         that.addImageEvents(image);
         
@@ -224,8 +231,11 @@ form {
 	    overDesk = false;
 	    $("desk").removeClassName("hover");
 	  })
+	  
+	  $("desk-left-scroller").observe("mouseover", function(event) {
+	    $("desk").morph("left:200px", {duration:1});
+	  })
 	});
-    
 </script>
 
 </body>

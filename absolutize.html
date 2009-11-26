@@ -1,0 +1,46 @@
+<html>
+<head>
+  <style>
+  div { margin:10px; border:1px solid #ccc;}
+  </style>
+</head>
+<body>
+  <div style="position:relative; left:4px;">
+    <div style= "position:relative; top:10px">
+      <img src="http://farm3.static.flickr.com/2537/4130676595_1d6ed1122a_m.jpg"/>
+    </div>
+  </div>
+  
+  
+<script src="prototype.s2.min.js" type="text/javascript"></script>
+<script>
+
+S2.enableMultitouchSupport = true;
+var z = 10;
+
+document.observe("dom:loaded", function(){
+  $$("img").each(function(img) {
+    var pos = img.cumulativeOffset(),
+        over = new Element('img', { src: img.src });
+    pos.push(0);
+    over.style.cssText = "position:absolute;left:"+pos[0]+";top:"+pos[1]+";";
+    
+    over.observe('manipulate:update', function(event){
+      over.style.cssText += 
+        ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
+      over.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
+      over._x = pos[0]+event.memo.panX;
+      over._y = pos[1]+event.memo.panY;
+      
+      if(event.memo.scale < 0.2) { img.remove(); return; }
+      event.stop();
+    });
+    
+    
+    document.body.insert(over);
+    
+  });
+});
+</script>
+</body>
+</html>
