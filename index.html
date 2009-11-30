@@ -63,13 +63,7 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
     	    this.collages.push(c);
     	  },
     	  overCollage: function(e){
-    	    return this.collages.find(function(c){
-    	      var eOffset = e.cumulativeOffset(), x = eOffset[0], y = eOffset[1],
-    	          cOffset = c.el.cumulativeOffset(), top = cOffset[0], left = cOffset[1],
-    	          bottom = top + c.el.getHeight(), right = left+c.el.getWidth();
-    	      console.log(c.el.id, top, y, bottom, "|", left, x, right);
-    	      return y > top < bottom && x > left < right;
-  	      });
+    	    return this.collages.find(function(c){var o=e.cumulativeOffset();return Position.within(c.el, o[0], o[1]);});
     	  }
     	};
 	    
@@ -100,13 +94,29 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
         onSuccess: function(response) { that.processData(response.responseText.evalJSON()); }
       });
 	  },
-	  processData: function(data) {
+	  // give img a position relative to this element
+	  position: function(img){
+	    switch(img.parentElement){
+	    case null: // new element: random
+	      return [r()*this.el.getHeight(), r()*this.el.getWidth(), r()*1-0.5];
+	    case this.el: 
+	      return img.retrieve('pos');
+	    default: // from another collage
+	      var imgO = img.cumulativeOffset(), colO = this.el.cumulativeOffset();
+	      return [imgO[0]-colO[0], imgO[1]-colO[1], img._r];
+	    }
+	  },
+	  processData: function(data){
 	    var that = this;
       data.items.each(function(photo,idx){
         if(idx>10) return;
-        var image = that.newImage(photo),
-            pos = [r()*that.el.getHeight(), r()*that.el.getWidth(), r()*1-0.5, photo];
+        var image = that.newImage(photo), pos = that.position(image);
+	      // give it styles and pos
+	      // add events
+	      // insert in photoE
+	    
         image.store("pos", pos);
+        
         image.alt = "'" + photo.title + "' by " + photo.author;
         that.photoE().insert(image);
         that.addImageEvents(image);
@@ -128,17 +138,32 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
       return image;
 		},
 		insertImage: function(img) {
-      this.photoE().insert(image);
+		  if(!img.descendantOf(this.el)) {
+		    console.log("was at: ", img.cumulativeOffset());
+		    console.log("positioning for: ", this.el.cumulativeOffset());
+		    var pos = this.position(img);
+		    console.log("now: ", pos)
+		    img.style.cssText+="left:"+pos[0]+"px;top:"+pos[1]+"px;";
+		    console.log("position is (left):", img.style.left)
+      	  this.removeImageEvents(img);
+		    console.log("position is (left):", img.style.left)
+    	  img.store("pos", this.position(img));
+		  }
+      this.photoE().insert(img);
 		},
-		deserialize: function(data) {
-      data.images.each(function(img) {
-        this.insertImage(self.newImage(img));
-      });
-    },
+		removeImageEvents: function(img){
+  	  img.stopObserving("manipulate:update");
+      img.stopObserving("mousedown");
+      img.stopObserving("mouseup");
+		},
 	  addImageEvents: function(img) {
 	    var that = this;
 	    img.observe('manipulate:update', function(event){
-	      pos = img.retrieve("pos");
+        // Smush to delete
+	      if(event.memo.scale < 0.4) { img.remove(); return; }
+	      
+	      // Update position/transformation
+	      var pos = img.retrieve("pos");
         img.style.cssText += 
           ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
         img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
@@ -146,20 +171,23 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
         img._y = pos[1]+event.memo.panY;
         img._r = pos[2]+event.memo.rotation;
         img._scale = event.memo.scale
-      
-	      if(event.memo.scale < 0.4) { img.remove(); return; }
+
         event.stop();
       });
       
 	    img.observe("mousedown", function(e){ this.el.insert(e.element())}.bind(this));
-	    img.observe("mouseup", function(e){ Collages.overCollage(e.element()); });
+	    img.observe("mouseup", function(e){ 
+	      var c = Collages.overCollage(e.element());
+	      if(c && c.insertImage) c.insertImage(e.element());
+	    });
 	  }
 	});
 	
 	// Initialize collages
-	
 	document.observe("dom:loaded", function(){
 	  fc  = new FlickrCollage($("flickr_collage"));
+	  $$("#flickr_collage .q")[0].value = "Sun";
+	  $$("#flickr_collage .fetch")[0].click();
   	fc2 = new FlickrCollage($("flickr_collage_2"));
 	});
 </script>

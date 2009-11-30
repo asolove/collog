@@ -1,3 +1,14 @@
 Code directly stolen from the script2 examples.
 
 For now, this is just an exploration of serializing/deserializing the collages.
+
+
+Single page applications in Prototype
+
+- Use hash for bookmarkable actions (start with / to allow normal anchors)
+
+- Overview:
+  App.js - router - view controllers - model - server
+  
+  App.route(\/collage/(\d*)/, [CollageController, "view"])
+  App.route(\/collage/new)
