@@ -82,7 +82,7 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
 		  this.el = el;
 	    this.fetchE().observe("click", (function(){this.fetchPictures();}).bind(this));
 	    this.inputE().observe("click", (function(){this.inputE().focus();}).bind(this));
-	    this.formE().observe("submit", (function(e){e.stop();this.el.fire("collage:fetch");}).bind(this));
+	    this.formE().observe("submit", (function(e){this.el.fire("collage:fetch");e.stop();}).bind(this));
 	    this.el.observe("collage:fetch", (function(e){e.stop();this.fetchPictures();}).bind(this));
 	    Collages.addCollage(this);
 		},
@@ -102,19 +102,18 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
 	    case this.el: 
 	      return img.retrieve('pos');
 	    default: // from another collage
-	      var imgO = img.cumulativeOffset(), colO = this.el.cumulativeOffset();
-	      return [imgO[0]-colO[0], imgO[1]-colO[1], img._r];
+	      var imgO = img.cumulativeOffset(), colO = this.el.cumulativeOffset(),
+	          oldO = img.offsetParent.cumulativeOffset(),
+	          pos = img.retrieve('pos')
+	      //return [pos[0]-oldO[0], pos[1]-oldO[1], 0];
+	      return [imgO[0]-colO[0], imgO[1]-colO[1], 0];
 	    }
 	  },
 	  processData: function(data){
 	    var that = this;
       data.items.each(function(photo,idx){
         if(idx>10) return;
-        var image = that.newImage(photo), pos = that.position(image);
-	      // give it styles and pos
-	      // add events
-	      // insert in photoE
-	    
+        var image = new Element('img', { src: photo.media.m }), pos = that.position(image);	    
         image.store("pos", pos);
         
         image.alt = "'" + photo.title + "' by " + photo.author;
@@ -130,24 +129,13 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
         });
       });
 	  },
-		newImage: function(photo) {
-		  var image = new Element('img', { src: photo.media.m }), 
-		      x = r()*500-50, y = -200, z=0, t=0;
-        // deserialize: x=photo.x, y=photo.y, z=photo.z, t=photo["-webkit-transform"], pos=[x,y]; // FIXME
-      image.style.cssText += ";top:"+y+";left:"+x+";z-index:"+ z++ +";-webkit-transform:"+t;
-      return image;
-		},
 		insertImage: function(img) {
 		  if(!img.descendantOf(this.el)) {
-		    console.log("was at: ", img.cumulativeOffset());
-		    console.log("positioning for: ", this.el.cumulativeOffset());
 		    var pos = this.position(img);
-		    console.log("now: ", pos)
 		    img.style.cssText+="left:"+pos[0]+"px;top:"+pos[1]+"px;";
-		    console.log("position is (left):", img.style.left)
-      	  this.removeImageEvents(img);
-		    console.log("position is (left):", img.style.left)
     	  img.store("pos", this.position(img));
+      	this.removeImageEvents(img);
+      	this.addImageEvents(img);
 		  }
       this.photoE().insert(img);
 		},
@@ -159,6 +147,7 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
 	  addImageEvents: function(img) {
 	    var that = this;
 	    img.observe('manipulate:update', function(event){
+        console.info("moved by: ", event.memo, img.retrieve('pos'));
         // Smush to delete
 	      if(event.memo.scale < 0.4) { img.remove(); return; }
 	      
@@ -167,18 +156,14 @@ body { font: 12px/1.2 Arial, serif; background-color:#e8e8e0;}
         img.style.cssText += 
           ';z-index:'+(z++)+';left:'+(pos[0]+event.memo.panX)+'px;top:'+(pos[1]+event.memo.panY)+'px;';
         img.transform({ rotation: pos[2]+event.memo.rotation, scale: event.memo.scale });
-        img._x = pos[0]+event.memo.panX;
-        img._y = pos[1]+event.memo.panY;
-        img._r = pos[2]+event.memo.rotation;
-        img._scale = event.memo.scale
-
+        
         event.stop();
       });
       
 	    img.observe("mousedown", function(e){ this.el.insert(e.element())}.bind(this));
 	    img.observe("mouseup", function(e){ 
-	      var c = Collages.overCollage(e.element());
-	      if(c && c.insertImage) c.insertImage(e.element());
+	      var c = Collages.overCollage(e.element()), el = e.element();
+	      if(c && c.insertImage) c.insertImage(el);
 	    });
 	  }
 	});
